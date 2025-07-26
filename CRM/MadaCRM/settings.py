@@ -20,12 +20,36 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'cs$65rh--f8(dh@5m46fyecu0%j42pgk%g870n!xtb9l_)j=e0'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'cs$65rh--f8(dh@5m46fyecu0%j42pgk%g870n!xtb9l_)j=e0')
+
+# Warn if using default secret key
+if SECRET_KEY == 'cs$65rh--f8(dh@5m46fyecu0%j42pgk%g870n!xtb9l_)j=e0':
+    import warnings
+    warnings.warn(
+        "Using default SECRET_KEY. Please set DJANGO_SECRET_KEY environment variable for production.",
+        RuntimeWarning
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
 
+# Configure ALLOWED_HOSTS based on environment
 ALLOWED_HOSTS = []
+if not DEBUG:
+    # In production, get allowed hosts from environment variable
+    allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS', '')
+    if allowed_hosts_env:
+        ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
+    else:
+        # Fallback warning for production without proper configuration
+        import warnings
+        warnings.warn(
+            "ALLOWED_HOSTS is empty in production mode. Please set DJANGO_ALLOWED_HOSTS environment variable.",
+            RuntimeWarning
+        )
+else:
+    # In debug mode, allow localhost and 127.0.0.1 for development
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 
 # Application definition
